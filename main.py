@@ -1,24 +1,19 @@
 from fastapi import FastAPI
-from routers import users, items, auth
-from models import Order  # нужен для orders
 from database import engine, Base
-from routers import tasks
-import models_task
-
-
-
+from models import Order  # для заказов
+from routers import users, items, tasks
+from auth.router import router as auth_router  # JWT логин
 
 app = FastAPI()
 
+# Создание всех таблиц в базе данных
 Base.metadata.create_all(bind=engine)
 
-app.include_router(tasks.router)
-
-
 # Подключаем роутеры
+app.include_router(tasks.router)
 app.include_router(users.router)
 app.include_router(items.router)
-app.include_router(auth.router)
+app.include_router(auth_router)  # эндпоинт /auth/token
 
 # Root
 @app.get("/")

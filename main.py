@@ -6,13 +6,35 @@ from database import engine, Base
 from models import Order
 from routers import users, items, tasks
 from auth.router import router as auth_router
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse
 
 
 # Tworzymy aplikację FastAPI
 app = FastAPI()
 
+# Inicjalizujemy Jinja2 do renderowania szablonów HTML
+templates = Jinja2Templates(directory="templates")
+
+# Montujemy katalog "static" do serwowania plików statycznych (CSS, JS, obrazy)
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 # Tworzymy tabele w bazie danych jeśli jeszcze nie istnieją
 Base.metadata.create_all(bind=engine)
+
+# Endpoint do renderowania strony HTML
+@app.get("/home", response_class=HTMLResponse)
+def home(request: Request):
+    return templates.TemplateResponse(
+        "index.html",
+        {
+            "request": request,
+            "title": "Moja strona FastAPI",
+            "items": ["A", "B", "C"]
+        }
+    )
+
 
 
 # CORS pozwala frontendowi (np. React) komunikować się z backendem

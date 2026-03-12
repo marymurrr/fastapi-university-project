@@ -1,29 +1,70 @@
-from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, HTTPException, Request, BackgroundTasks
+from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+
+import httpx
+import time
 
 from database import engine, Base
 from models import Order
 from routers import users, items, tasks
 from auth.router import router as auth_router
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse
 
 
-# Tworzymy aplikację FastAPI
 app = FastAPI()
 
-# Inicjalizujemy Jinja2 do renderowania szablonów HTML
-templates = Jinja2Templates(directory="templates")
 
-# Montujemy katalog "static" do serwowania plików statycznych (CSS, JS, obrazy)
+# static files (CSS, JS)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Tworzymy tabele w bazie danych jeśli jeszcze nie istnieją
+# HTML templates
+templates = Jinja2Templates(directory="templates")
+
+
+# create DB tables
 Base.metadata.create_all(bind=engine)
 
-# Endpoint do renderowania strony HTML
+
+# CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+class AppError(Exception):
+    def __init__(self, message: str, code: int = 400):
+        self.message = message
+        self.code = code
+
+
+@app.exception_handler(AppError)
+async def app_error_handler(request: Request, exc: AppError):
+    return JSONResponse(
+        status_code=exc.code,
+        content={
+            "error": exc.message,
+            "path": str(request.url)
+        }
+    )
+
+
+app.include_router(tasks.router)
+app.include_router(users.router)
+app.include_router(items.router)
+app.include_router(auth_router)
+
+
+@app.get("/")
+def read_root():
+    return {"message": "Hello FastAPI"}
+
+
 @app.get("/home", response_class=HTMLResponse)
 def home(request: Request):
     return templates.TemplateResponse(
@@ -36,50 +77,55 @@ def home(request: Request):
     )
 
 
-
-# CORS pozwala frontendowi (np. React) komunikować się z backendem
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # w development można używać "*"
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+@app.get("/sync")
+def sync_endpoint():
+    time.sleep(2)
+    return {"message": "Sync endpoint finished"}
 
 
-# Własny wyjątek aplikacji
-class AppError(Exception):
-    def __init__(self, message: str, code: int = 400):
-        self.message = message
-        self.code = code
+@app.get("/async")
+async def async_endpoint():
+    async with httpx.AsyncClient() as client:
+        await client.get("https://httpbin.org/get")
+    return {"message": "Async endpoint finished"}
 
 
-# Handler który przechwytuje AppError i zwraca JSON
-@app.exception_handler(AppError)
-async def app_error_handler(request: Request, exc: AppError):
-    return JSONResponse(
-        status_code=exc.code,
-        content={
-            "error": exc.message,
-            "path": str(request.url)
-        }
+@app.get("/weather/{city}")
+async def get_weather(city: str):
+
+    async with httpx.AsyncClient() as client:
+
+        response = await client.get(
+            "https://api.open-meteo.com/v1/forecast",
+            params={
+                "latitude": 52.52,
+                "longitude": 13.41,
+                "current_weather": True
+            }
+        )
+
+        return response.json()
+
+
+def send_email(email: str, message: str):
+
+    time.sleep(3)
+
+    print(f"Email to {email}: {message}")
+
+
+@app.post("/register")
+def register(email: str, background_tasks: BackgroundTasks):
+
+    background_tasks.add_task(
+        send_email,
+        email,
+        "Welcome!"
     )
 
-
-# Podłączamy routery z innych plików
-app.include_router(tasks.router)
-app.include_router(users.router)
-app.include_router(items.router)
-app.include_router(auth_router)  # router autoryzacji JWT
+    return {"message": "Registration completed"}
 
 
-# Root endpoint do testu API
-@app.get("/")
-def read_root():
-    return {"message": "Hello FastAPI"}
-
-
-# Przykład standardowego błędu HTTP
 @app.get("/items/{item_id}")
 def get_item(item_id: int):
 
@@ -98,13 +144,11 @@ def get_item(item_id: int):
     return {"id": item_id}
 
 
-# Endpoint pokazujący użycie własnego błędu
 @app.get("/check")
 def check():
     raise AppError("Coś poszło nie tak!", code=503)
 
 
-# Endpoint do tworzenia zamówienia
 @app.post("/orders")
 def create_order(order: Order):
     city = order.shipping_address.city

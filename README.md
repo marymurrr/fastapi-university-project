@@ -1,53 +1,58 @@
-🚀 FastAPI Master Course: From Zero to Production
-A comprehensive blueprint for building modern, high-performance APIs with Python. This project covers the full development lifecycle, from basic routing to secure, asynchronous production-grade systems.
+# 🚀 FastAPI University Project
 
-🌟 Why This Project?
-High Performance: Leveraging Starlette and Pydantic for speeds comparable to Node.js and Go.
+**Modern backend** with FastAPI demonstrating:
 
-Smart Validation: Automated data integrity using Python type hints.
+- REST APIs for tasks, users, items, orders  
+- JWT Authentication  
+- Async operations & background tasks  
+- HTML pages with Jinja2  
+- Static files (CSS/JS/images)  
+- CORS middleware
 
-Auto-Docs: Instant Swagger and ReDoc interactive documentation.
+---
 
-Production Ready: Built-in security (JWT), Database ORM, and Async support.
+## 🔐 Auth (JWT)
 
-🗺️ Project Roadmap
-📦 Phase 1: The Core
-Routing: Handling Path and Query parameters with automatic type conversion.
+- **POST `/auth/token`** → login & get token  
+- Include token in `Authorization: Bearer <token>` for protected routes  
 
-Data Schemas: Using Pydantic for strict request/response modeling and data filtering.
+**Example request:**
 
-Architecture: Scaling the app using APIRouter for modular, clean code.
+```http
+POST /auth/token
+Content-Type: application/x-www-form-urlencoded
 
-🔐 Phase 2: Security & Persistence
-Databases: Full CRUD integration using SQLAlchemy and SQLite.
+username=anna&password=123
+🌐 Endpoints
 
-Auth: Secure user authentication with JWT (JSON Web Tokens) and password hashing.
+GET / → root test
 
-Middleware: Handling CORS for frontend integration and custom error management.
+GET /home → HTML page with dynamic items
 
-🚀 Phase 3: Advanced Features
-Fullstack Lite: Serving static files and HTML using Jinja2 templates.
+GET /items/{id} → fetch item by id
 
-Concurrency: Implementing async/await for non-blocking I/O operations.
+POST /orders → create order
 
-Background Tasks: Offloading heavy processes to keep the API responsive.
+GET /weather/{city} → async fetch weather
 
-🛠️ Tech Stack
-Language: Python 3.8+
+POST /register → background task (send email)
 
-Framework: FastAPI
+🖥️ HTML & Static
 
-Server: Uvicorn (ASGI)
+Templates: /templates/index.html
 
-ORM: SQLAlchemy
+Static: /static/style.css, /static/script.js
 
-Security: Jose (JWT), Passlib (Bcrypt)
+Access static: http://127.0.0.1:8000/static/style.css
 
-Templating: Jinja2
+⚡ Async & Background Tasks
 
-🚦 Quick Start
-Install dependencies via pip.
+async def → non-blocking I/O
 
-Launch the server using Uvicorn.
+BackgroundTasks → tasks run after response
 
-Explore the docs at /docs.
+🧪 Run Locally
+git clone <repo-url>
+cd fastapi-university-project
+pip install fastapi uvicorn sqlalchemy passlib[bcrypt] python-jose httpx jinja2 aiofiles
+uvicorn main:app --reload

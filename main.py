@@ -9,6 +9,7 @@ import time
 
 from database import engine, Base
 from models import Order
+from models_task import Task, User, Post, Tag
 from routers import users, items, tasks
 from auth.router import router as auth_router
 

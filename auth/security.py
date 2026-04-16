@@ -6,7 +6,7 @@ SECRET_KEY = "zmien-na-losowy-ciag-znakow-w-produkcji"  # поменяй на с
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-pwd_context = CryptContext(schemes=["bcrypt"])
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)  # хэширование пароля

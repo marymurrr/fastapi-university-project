@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from auth.security import decode_token
 from jose import JWTError
@@ -32,3 +32,21 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         
     except JWTError:
         raise HTTPException(status_code=401, detail="Token expired or invalid")
+    
+
+
+
+# Это "Фабрика проверок". Мы говорим, какую роль мы требуем.
+def require_role(required_role: str):
+    def role_checker(current_user: User = Depends(get_current_user)) -> User:
+        # Если роль пользователя не совпадает с нужной (например, он не admin)
+        if current_user.role != required_role:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"У вас нет прав! Нужна роль: {required_role}"
+            )
+        return current_user
+    return role_checker
+
+# Создаем удобную сокращалку для админа
+require_admin = require_role("admin")

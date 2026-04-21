@@ -18,7 +18,8 @@ def register(username: str, email: str, password: str, db: Session = Depends(get
     new_user = User(
         username=username,
         email=email,
-        hashed_password=hash_password(password) # Хешируем пароль перед сохранением!
+        hashed_password=hash_password(password), # Хешируем пароль перед сохранением!
+        role="admin"
     )
     
     # 3. Сохраняем в базу данных

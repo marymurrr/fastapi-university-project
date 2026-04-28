@@ -1,12 +1,12 @@
 from pydantic import BaseModel, EmailStr
 
-# Это то, что нам присылает юзер
+# Schema for user registration data provided by the client
 class UserCreate(BaseModel):
     username: str
     email: EmailStr
     password: str
 
-# Это то, что мы показываем юзеру (без пароля!)
+# Schema for public user data returned to the client (excludes sensitive information)
 class UserOut(BaseModel):
     id: int
     username: str
@@ -14,4 +14,5 @@ class UserOut(BaseModel):
     role: str
 
     class Config:
+        # Enables compatibility with SQLAlchemy models (ORM mode)
         from_attributes = True

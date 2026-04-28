@@ -10,8 +10,8 @@ router = APIRouter(
     tags=["tasks"]
 )
 
-# --- СХЕМЫ (Pydantic) ---
-# Сначала TagOut, чтобы TaskOut мог его использовать
+# --- Pydantic Schemas ---
+
 class TagOut(BaseModel):
     id: int
     name: str
@@ -22,21 +22,21 @@ class TagOut(BaseModel):
 class TaskCreate(BaseModel):
     title: str
     description: str = ""
-    tags: list[str] = []  # Список имен тегов, например ["work", "urgent"]
+    tags: list[str] = []  # List of tag names, e.g., ["work", "urgent"]
 
 class TaskOut(BaseModel):
     id: int
     title: str
     description: str
     done: bool
-    tags: list[TagOut] = []  # Теперь теги будут видны в ответе!
+    tags: list[TagOut] = []  # Includes associated tags in the response
 
     class Config:
         from_attributes = True
 
-# --- ЭНДПОИНТЫ ---
+# --- Endpoints ---
 
-# 1. Получение своих задач (с поиском и пагинацией)
+# 1. Retrieve user-specific tasks with filtering and pagination
 @router.get("/", response_model=list[TaskOut])
 def get_tasks(
     db: Session = Depends(get_db),
@@ -46,7 +46,7 @@ def get_tasks(
     page: int = Query(1, ge=1),
     per_page: int = Query(10, le=100)
 ):
-    # .options(joinedload(Task.tags)) подтягивает теги из базы одним запросом
+    # Use joinedload to fetch associated tags in a single SQL query (Eager Loading)
     query = db.query(Task).options(joinedload(Task.tags)).filter(Task.author_id == current_user.id)
 
     if search:
@@ -57,7 +57,7 @@ def get_tasks(
     skip = (page - 1) * per_page
     return query.offset(skip).limit(per_page).all()
 
-# 2. Создание задачи с тегами
+# 2. Create a new task with tag association logic
 @router.post("/", response_model=TaskOut, status_code=201)
 def create_task(
     data: TaskCreate, 
@@ -70,7 +70,7 @@ def create_task(
         author_id=current_user.id
     )
 
-    # Логика тегов: ищем существующий или создаем новый
+    # Tag management: Reuse existing tags or create new ones
     for tag_name in data.tags:
         tag = db.query(Tag).filter(Tag.name == tag_name).first()
         if not tag:
@@ -83,7 +83,7 @@ def create_task(
     db.refresh(new_task)
     return new_task
 
-# 3. Обновление задачи
+# 3. Update an existing task and synchronize its tags
 @router.put("/{task_id}", response_model=TaskOut)
 def update_task(
     task_id: int, 
@@ -98,7 +98,7 @@ def update_task(
     task.title = data.title
     task.description = data.description
     
-    # Синхронизация тегов
+    # Refresh tag associations
     task.tags = []
     for tag_name in data.tags:
         tag = db.query(Tag).filter(Tag.name == tag_name).first()
@@ -110,7 +110,7 @@ def update_task(
     db.refresh(task)
     return task
 
-# 4. Удаление задачи
+# 4. Delete a task resource
 @router.delete("/{task_id}", status_code=204)
 def delete_task(
     task_id: int, 
@@ -124,11 +124,11 @@ def delete_task(
     db.commit()
     return None
 
-# 5. АДМИНКА: Все задачи всех пользователей
+# 5. Administrative endpoint: Retrieve all tasks across all users
 @router.get("/admin/all", response_model=list[TaskOut])
 def get_all_tasks_for_admin(
     db: Session = Depends(get_db),
     admin_user: User = Depends(require_admin)
 ):
-    # Админ видит всё, включая теги каждой задачи
+    # Admin access provides full visibility into the task database including tags
     return db.query(Task).options(joinedload(Task.tags)).all()

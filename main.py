@@ -9,22 +9,18 @@ import time
 
 from database import engine, Base
 from models_task import Task, User, Tag
-from routers import tasks  # Проверь, что этот файл точно существует!
+from routers import tasks  
 from auth.router import router as auth_router
 
 app = FastAPI()
 
-# Создаем таблицы
+# Initialize database tables
 Base.metadata.create_all(bind=engine)
 
-# Подключаем роутер ТАСКОВ (убедись, что эта строка ОДНА)
+# Register API routers for tasks and authentication
 app.include_router(tasks.router)
 app.include_router(auth_router)
 
-#@app.get("/")
-#def read_root():
-    #return {"message": "Hello FastAPI"}
-
-# Попробуй зайти по этой ссылке вручную: http://127.0.0.1:8000/tasks/admin/all
-
-app.mount("/", StaticFiles(directory="static", html=True), name="static")  
+# Mount static files to serve the frontend application
+# Note: StaticFiles should be mounted after routers to avoid path conflicts
+app.mount("/", StaticFiles(directory="static", html=True), name="static")

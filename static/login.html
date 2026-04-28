@@ -44,7 +44,7 @@
     </div>
 
     <script>
-        // Сердечки (как раньше)
+        // Background animation: Floating heart elements
         function createHeart() {
             const container = document.getElementById('heartsContainer');
             const heart = document.createElement('div');
@@ -55,7 +55,7 @@
         }
         setInterval(createHeart, 500);
 
-        // Переключение между Логином и Регистрацией
+        // UI Logic: Toggle between Login and Registration views
         const loginForm = document.getElementById('loginForm');
         const registerForm = document.getElementById('registerForm');
         const formTitle = document.getElementById('formTitle');
@@ -80,7 +80,7 @@
             }
         };
 
-        // ЛОГИКА ЛОГИНА
+        // Authentication: Handle user login request
         loginForm.onsubmit = async (e) => {
             e.preventDefault();
             const formData = new URLSearchParams();
@@ -102,14 +102,14 @@
             }
         };
 
-        // ЛОГИКА РЕГИСТРАЦИИ
+        // Registration: Handle new account creation request
         registerForm.onsubmit = async (e) => {
             e.preventDefault();
             const username = document.getElementById('regUsername').value;
             const email = document.getElementById('regEmail').value;
             const password = document.getElementById('regPassword').value;
 
-            // Отправляем как query параметры, как требует твой Python код
+            // Transmit registration data via query parameters as required by backend
             const url = `/auth/register?username=${encodeURIComponent(username)}&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`;
 
             const response = await fetch(url, { method: 'POST' });
@@ -118,7 +118,7 @@
                 message.style.display = 'block'; message.style.color = 'green';
                 message.textContent = '✨ Success! Now please login.';
                 registerForm.reset();
-                setTimeout(() => toggleLink.click(), 2000); // Возвращаемся на логин через 2 сек
+                setTimeout(() => toggleLink.click(), 2000); // Redirect to login view after delay
             } else {
                 const err = await response.json();
                 message.style.display = 'block'; message.style.color = 'red';

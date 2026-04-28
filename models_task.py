@@ -2,9 +2,7 @@ from sqlalchemy import Column, Integer, String, Boolean, Text, ForeignKey, Table
 from sqlalchemy.orm import relationship
 from database import Base
 
-# 1. ТАБЛИЦА-МОСТ (Association Table)
-# Она не видна пользователю, в ней просто две колонки: 
-# "какая задача" и "какой тег". Без неё связь "многие ко многим" не сработает.
+# Association table for Many-to-Many relationship between Tasks and Tags
 task_tags = Table(
     "task_tags",
     Base.metadata,
@@ -18,7 +16,7 @@ class User(Base):
     username = Column(String(50), unique=True, nullable=False)
     email = Column(String(255), unique=True, nullable=False)
     hashed_password = Column(String, nullable=False)
-    role = Column(String(20), default="user") # Роль: admin или user
+    role = Column(String(20), default="user") # User roles: e.g., 'admin' or 'user'
 
     tasks = relationship("Task", back_populates="author", cascade="all, delete-orphan")
 
@@ -32,8 +30,7 @@ class Task(Base):
 
     author = relationship("User", back_populates="tasks")
     
-    # 2. СВЯЗЬ С ТЕГАМИ
-    # Мы говорим SQLAlchemy: "смотри в таблицу task_tags, чтобы найти теги для этой задачи"
+    # Relationship with Tag model using the secondary association table
     tags = relationship("Tag", secondary=task_tags, back_populates="tasks")
 
 class Tag(Base):
@@ -41,5 +38,5 @@ class Tag(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(50), unique=True, nullable=False)
 
-    # Обратная связь: чтобы по тегу можно было найти все задачи
+    # Back-reference to access all tasks associated with a specific tag
     tasks = relationship("Task", secondary=task_tags, back_populates="tags")

@@ -15,9 +15,16 @@
 
 ## 📸 Visual Showcase
 
+## 📸 Visual Showcase
+
 <p align="center">
-  <img src="login.png" width="450" style="border-radius: 15px; border: 3px solid #ffb6c1; margin: 10px;">
-  <img src="dashboard.png" width="450" style="border-radius: 15px; border: 3px solid #ffb6c1; margin: 10px;">
+  <h3 align="center">Login Interface</h3>
+  <img src="login.png" width="100%" style="border-radius: 20px; border: 4px solid #ffb6c1; max-width: 900px;">
+</p>
+
+<p align="center">
+  <h3 align="center">Dashboard</h3>
+  <img src="dashboard.png" width="100%" style="border-radius: 20px; border: 4px solid #ffb6c1; max-width: 900px;">
 </p>
 
 ---
